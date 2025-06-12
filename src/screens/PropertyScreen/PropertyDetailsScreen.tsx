@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import HTMLView from 'react-native-htmlview';
+import {useTranslation} from 'react-i18next';
 
 const DEFAULT_IMAGES_FOR_TYPES = {
   apartment: 'https://via.placeholder.com/600x400?text=Apartment',
@@ -34,9 +35,9 @@ const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({
   propertyData,
   loading,
 }) => {
+  const {t, i18n} = useTranslation();
+  const isArabic = i18n.language === 'ar';
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
-  const [isDescriptionExpanded, setIsDescriptionExpanded] =
-    useState<boolean>(false);
   const images: string[] =
     propertyData?.images && propertyData.images.length > 0
       ? propertyData.images
@@ -98,34 +99,45 @@ const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({
             </View>
             <View style={styles.contentPadding}>
               <Text style={styles.price}>
-                {propertyData?.price ? `${propertyData.price} KWD` : 'N/A'}
+                {Number(
+                  isArabic ? propertyData?.priceArabic : propertyData?.price,
+                ) === 0 || !propertyData?.price
+                  ? 'N/A'
+                  : `${
+                      isArabic ? propertyData?.priceArabic : propertyData?.price
+                    } ${t('propertyDetails.pricePerYear')}`}
               </Text>
               <Text style={styles.location}>
-                {propertyData?.location?.city}
+                {t(`locations.${propertyData?.location?.city}`)}
               </Text>
               <View style={styles.detailsRow}>
                 <Text style={styles.detailText}>
-                  {propertyData?.bedrooms || '--'} Beds
+                  {(isArabic
+                    ? propertyData?.bedroomsArabic
+                    : propertyData?.bedrooms) || '--'}{' '}
+                  {t('propertyDetails.bedrooms', {
+                    count: propertyData?.bedrooms || '--',
+                  })}
                 </Text>
                 <Text style={styles.separator}>|</Text>
                 <Text style={styles.detailText}>
-                  {propertyData?.bathrooms || '--'} Baths
+                  {(isArabic
+                    ? propertyData?.bathroomsArabic
+                    : propertyData?.bathrooms) || '--'}{' '}
+                  {t('propertyDetails.bathrooms', {
+                    count: propertyData?.bathrooms || '--',
+                  })}
                 </Text>
                 <Text style={styles.separator}>|</Text>
                 <Text style={styles.detailText}>
-                  {propertyData?.size || '--'} m²
+                  {(isArabic ? propertyData?.sizeArabic : propertyData?.size) ||
+                    '--'}{' '}
+                  {t('propertyDetails.area', {
+                    size: propertyData?.size || '--',
+                  })}
                 </Text>
               </View>
-              <TouchableOpacity
-                onPress={() =>
-                  setIsDescriptionExpanded(!isDescriptionExpanded)
-                }>
-                <Text style={styles.expandBtn}>
-                  {isDescriptionExpanded
-                    ? 'See Less Details'
-                    : 'See More Details'}
-                </Text>
-              </TouchableOpacity>
+              {/* Removed 'see more details' and description is always fully shown */}
               {propertyData?.description ? (
                 <HTMLView
                   value={propertyData.description}
@@ -134,11 +146,12 @@ const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({
                     div: styles.description,
                     span: styles.description,
                   }}
-                  numberOfLines={isDescriptionExpanded ? undefined : 4}
                 />
               ) : null}
               <View style={styles.amenitiesSection}>
-                <Text style={styles.sectionTitle}>Amenities</Text>
+                <Text style={styles.sectionTitle}>
+                  {t('propertyDetails.amenities')}
+                </Text>
                 {propertyData?.amenities?.map(
                   (amenity: string, idx: number) => (
                     <Text key={idx} style={styles.amenityItem}>
@@ -147,26 +160,35 @@ const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({
                   ),
                 )}
               </View>
-              <View style={styles.agentSection}>
+            </View>
+            {/* Agent info fixed to bottom with white bg and smaller close button */}
+            <View style={styles.agentFooterSection}>
+              <View style={styles.agentSectionFooterContent}>
                 <Image
                   source={{
                     uri:
                       propertyData?.userId?.image ||
                       'https://via.placeholder.com/112x112?text=User',
                   }}
-                  style={styles.agentImage}
+                  style={styles.agentImageFooter}
                 />
-                <Text style={styles.agentName}>
-                  {propertyData?.userId?.name}
-                </Text>
-                <Text style={styles.agentPhone}>
-                  {propertyData?.userId?.phoneNumber}
-                </Text>
+                <View style={styles.agentInfoFooter}>
+                  <Text style={styles.agentNameFooter}>
+                    {propertyData?.userId?.name}
+                  </Text>
+                  <Text style={styles.agentPhoneFooter}>
+                    {propertyData?.userId?.phoneNumber}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.closeBtnFooter}
+                  onPress={onClose}>
+                  <Text style={styles.closeBtnTextFooter}>
+                    {t('close', 'Close')}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-              <Text style={styles.closeBtnText}>Close</Text>
-            </TouchableOpacity>
           </ScrollView>
         )}
       </View>
@@ -217,15 +239,59 @@ const styles = StyleSheet.create({
   },
   agentName: {fontWeight: 'bold', fontSize: 16},
   agentPhone: {color: '#059669', fontSize: 15, marginTop: 2},
-  closeBtn: {
+  agentFooterSection: {
+    position: 'static',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: -2},
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+  agentSectionFooterContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  agentImageFooter: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#eee',
+  },
+  agentInfoFooter: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  agentNameFooter: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    marginBottom: 2,
+  },
+  agentPhoneFooter: {
+    color: '#059669',
+    fontSize: 13,
+  },
+  closeBtnFooter: {
     backgroundColor: '#059669',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 14,
-    borderRadius: 8,
-    margin: 24,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+    marginLeft: 10,
   },
-  closeBtnText: {color: '#fff', fontWeight: 'bold'},
+  closeBtnTextFooter: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 13,
+  },
   contentPadding: {padding: 16},
 });
 

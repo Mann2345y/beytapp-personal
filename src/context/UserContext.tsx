@@ -2,6 +2,7 @@ import React, {createContext, useState, useContext} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../api/axiosConfig';
 import {Alert} from 'react-native';
+import {ROUTES} from '../constants/routes';
 
 interface UserContextType {
   user: any;
@@ -42,7 +43,7 @@ export const UserProvider = ({children}: {children: React.ReactNode}) => {
       console.log('[LOGIN][UserContext] Token saved successfully.');
 
       console.log('[LOGIN][UserContext] Requesting user data from API...');
-      const res = await api.get('/users/get-logged-user', {
+      const res = await api.get(ROUTES.GET_LOGGED_USER, {
         headers: {Authorization: `Bearer ${token}`},
       });
       console.log('[LOGIN][UserContext] Received response from API:', res.data);

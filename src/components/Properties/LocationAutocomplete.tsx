@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import {useQuery} from '@tanstack/react-query';
 import api from '../../api/axiosConfig';
+import {ROUTES} from '../../constants/routes';
 
 interface LocationAutocompleteProps {
   value: string;
@@ -28,7 +29,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   const {data} = useQuery({
     queryKey: ['locations'],
     queryFn: async () => {
-      const res = await api.get('/locations');
+      const res = await api.get(ROUTES.LOCATIONS);
       return res.data || [];
     },
   });

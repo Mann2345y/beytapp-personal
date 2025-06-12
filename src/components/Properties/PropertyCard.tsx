@@ -8,6 +8,7 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
+import {useTranslation} from 'react-i18next';
 
 import DefaultImageApartment from '../../assets/images/apartment.png';
 import DefaultImageBuilding from '../../assets/images/building.png';
@@ -47,6 +48,9 @@ interface PropertyCardProps {
 const {width} = Dimensions.get('window');
 
 const PropertyCard: React.FC<PropertyCardProps> = ({property, onPress}) => {
+  console.log({property});
+  const {t, i18n} = useTranslation();
+  const isArabic = i18n.language === 'ar';
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const images =
@@ -98,24 +102,40 @@ const PropertyCard: React.FC<PropertyCardProps> = ({property, onPress}) => {
       </View>
       <View style={styles.infoContainer}>
         <Text style={[styles.status, {backgroundColor: statusBgColor}]}>
-          {property?.status === 'sale' ? 'Sale' : 'Rent'}
+          {property?.status === 'sale' ? t('cards.sale') : t('cards.rent')}
         </Text>
-        <Text style={styles.type}>{property?.type}</Text>
+        <Text style={styles.type}>
+          {t(`propertyTypes.${property?.type?.toLowerCase?.()}`) ||
+            property?.type}
+        </Text>
         <Text style={styles.price}>
-          {Number(property?.price) === 0 ? 'N/A' : `${property?.price} KWD`}
+          {Number(isArabic ? property?.priceArabic : property?.price) === 0
+            ? 'N/A'
+            : `${isArabic ? property?.priceArabic : property?.price} ${t(
+                'propertyDetails.pricePerYear',
+              )}`}
         </Text>
         <View style={styles.detailsRow}>
           <Text style={styles.detailText}>
-            {property?.bedrooms || '--'} Beds
+            {(isArabic ? property?.bedroomsArabic : property?.bedrooms) || '--'}{' '}
+            {t('cards.beds')}
           </Text>
           <Text style={styles.separator}>|</Text>
           <Text style={styles.detailText}>
-            {property?.bathrooms || '--'} Baths
+            {(isArabic ? property?.bathroomsArabic : property?.bathrooms) ||
+              '--'}{' '}
+            {t('cards.baths')}
           </Text>
           <Text style={styles.separator}>|</Text>
-          <Text style={styles.detailText}>{property?.size || '--'} m²</Text>
+          <Text style={styles.detailText}>
+            {(isArabic ? property?.bathroomsArabic : property?.bathrooms) ||
+              '--'}{' '}
+            {t('cards.areaNotation')}
+          </Text>
         </View>
-        <Text style={styles.location}>{property?.location?.city}</Text>
+        <Text style={styles.location}>
+          {t(`locations.${property?.location?.city}`)}
+        </Text>
       </View>
     </TouchableOpacity>
   );

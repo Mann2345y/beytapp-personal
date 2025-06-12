@@ -2,32 +2,30 @@ import React, {
   createContext,
   useContext,
   useState,
-  useEffect,
-  ReactNode,
   useMemo,
+  ReactNode,
 } from 'react';
+import {useInfiniteQuery} from '@tanstack/react-query';
 import api from '../api/axiosConfig';
+import {ROUTES} from '../constants/routes';
 
 interface Property {
   id: number;
-  // Add other property fields as needed
   [key: string]: any;
 }
-
 interface Filters {
   [key: string]: any;
 }
-
 interface PropertyContextType {
   properties: Property[];
   loading: boolean;
   error: string | null;
   filters: Filters;
-  page: number;
-  totalPages: number;
   setFilters: (filters: Filters) => void;
-  setPage: (page: number) => void;
-  fetchProperties: () => void;
+  fetchMore: () => void;
+  hasMore: boolean;
+  refetch: () => void;
+  isFetchingMore: boolean;
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(
@@ -36,11 +34,10 @@ const PropertyContext = createContext<PropertyContextType | undefined>(
 
 export const usePropertyContext = () => {
   const context = useContext(PropertyContext);
-  if (!context) {
+  if (!context)
     throw new Error(
       'usePropertyContext must be used within a PropertyProvider',
     );
-  }
   return context;
 };
 
@@ -51,13 +48,9 @@ interface PropertyProviderProps {
 export const PropertyProvider: React.FC<PropertyProviderProps> = ({
   children,
 }) => {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({});
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
+  // Memoize convertedFilters as before
   const convertedFilters = useMemo(() => {
     const filtersToReturn = Object.fromEntries(
       Object.entries({
@@ -85,51 +78,46 @@ export const PropertyProvider: React.FC<PropertyProviderProps> = ({
     return filtersToReturn;
   }, [filters]);
 
-  const fetchProperties = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      console.log({convertedFilters});
-      const params = {...convertedFilters, page};
-      console.log('Fetching properties with params:', params);
-      const response = await api.get('/properties', {params});
-      console.log('API response:', response);
-      setProperties(response.data.properties || []);
-      setTotalPages(response.data.totalPages || 1);
-    } catch (err: any) {
-      console.log('Network/API error:', err);
-      if (err.response) {
-        console.log('Error response data:', err.response.data);
-        console.log('Error response status:', err.response.status);
-        console.log('Error response headers:', err.response.headers);
-      } else if (err.request) {
-        console.log('No response received. Error request:', err.request);
-      } else {
-        console.log('Error message:', err.message);
-      }
-      setError(err.message || 'Failed to fetch properties');
-    } finally {
-      setLoading(false);
-    }
+  const fetchProperties = async ({pageParam = 1}) => {
+    const params = {...convertedFilters, page: pageParam};
+    const res = await api.get(ROUTES.PROPERTIES, {params});
+    return {
+      properties: res.data.properties || [],
+      nextPage: res.data.totalPages > pageParam ? pageParam + 1 : undefined,
+      totalPages: res.data.totalPages,
+    };
   };
 
-  useEffect(() => {
-    fetchProperties();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [convertedFilters, page]);
+  const {
+    data,
+    error,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    refetch,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['properties', convertedFilters],
+    queryFn: fetchProperties,
+    getNextPageParam: lastPage => lastPage.nextPage,
+    // Refetch when filters change (by queryKey)
+  });
+
+  // Flatten pages to a single array
+  const properties = data?.pages.flatMap(page => page.properties) || [];
 
   return (
     <PropertyContext.Provider
       value={{
         properties,
-        loading,
-        error,
+        loading: isLoading && !isFetchingNextPage,
+        error: error ? (error as any).message : null,
         filters,
-        page,
-        totalPages,
         setFilters,
-        setPage,
-        fetchProperties,
+        fetchMore: fetchNextPage,
+        hasMore: !!hasNextPage,
+        refetch,
+        isFetchingMore: isFetchingNextPage,
       }}>
       {children}
     </PropertyContext.Provider>

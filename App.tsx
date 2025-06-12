@@ -5,6 +5,9 @@ import {NavigationContainer} from '@react-navigation/native';
 import BottomTabs from './src/navigation/BottomTabs';
 import {UserProvider} from './src/context/UserContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import './i18n';
+import {I18nextProvider} from 'react-i18next';
+import i18n from './i18n';
 
 Ionicons.loadFont();
 
@@ -15,9 +18,11 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <PropertyProvider>
         <UserProvider>
-          <NavigationContainer>
-            <BottomTabs />
-          </NavigationContainer>
+          <I18nextProvider i18n={i18n}>
+            <NavigationContainer>
+              <BottomTabs />
+            </NavigationContainer>
+          </I18nextProvider>
         </UserProvider>
       </PropertyProvider>
     </QueryClientProvider>

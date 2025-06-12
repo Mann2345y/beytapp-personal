@@ -11,29 +11,30 @@ import {
 } from 'react-native';
 import {usePropertyContext} from '../../context/PropertyContext';
 import LocationAutocomplete from './LocationAutocomplete';
+import {useTranslation} from 'react-i18next';
 
 const FILTER_OPTIONS = {
   sortBy: [
-    {label: 'Price : Low to High', value: 'price_asc'},
-    {label: 'Price : High to Low', value: 'price_desc'},
-    {label: 'Newest', value: 'created_desc'},
-    {label: 'Beds : Low to High', value: 'beds_asc'},
-    {label: 'Beds : High to Low', value: 'beds_desc'},
-    {label: 'Baths : Low to High', value: 'baths_asc'},
-    {label: 'Baths : High to Low', value: 'baths_desc'},
+    {label: 'sortOptions.price_asc', value: 'price_asc'},
+    {label: 'sortOptions.price_desc', value: 'price_desc'},
+    {label: 'sortOptions.listing_date', value: 'created_desc'},
+    {label: 'sortOptions.beds_asc', value: 'beds_asc'},
+    {label: 'sortOptions.beds_desc', value: 'beds_desc'},
+    {label: 'sortOptions.baths_asc', value: 'baths_asc'},
+    {label: 'sortOptions.baths_desc', value: 'baths_desc'},
   ],
   bedrooms: [1, 2, 3, 4, 5],
   bathrooms: [1, 2, 3, 4, 5],
   type: [
-    'Apartment',
-    'Villa',
-    'Duplex',
-    'Chalet',
-    'Commercial',
-    'Land',
-    'Farm',
-    'Office',
-    'Stable',
+    'apartment',
+    'villa',
+    'duplex',
+    'chalet',
+    'commercial',
+    'land',
+    'farm',
+    'office',
+    'stable',
   ],
   status: ['sale', 'rent'],
 };
@@ -50,6 +51,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({label, onPress}) => (
 
 const PropertyFilterBar = () => {
   const {filters, setFilters} = usePropertyContext();
+  const {t} = useTranslation();
   const [activeFilter, setActiveFilter] = useState<
     keyof typeof FILTER_OPTIONS | null
   >(null);
@@ -117,14 +119,18 @@ const PropertyFilterBar = () => {
   };
 
   const renderModalContent = () => {
-    if (!activeFilter) return null;
+    if (!activeFilter) {
+      return null;
+    }
     const isSortBy = activeFilter === 'sortBy';
     const isType = activeFilter === 'type';
-
-    const data = isSortBy
-      ? FILTER_OPTIONS.sortBy
-      : FILTER_OPTIONS[activeFilter].map(String);
-
+    const isStatus = activeFilter === 'status';
+    let data: any[] = [];
+    if (isSortBy) {
+      data = FILTER_OPTIONS.sortBy;
+    } else {
+      data = FILTER_OPTIONS[activeFilter].map(String);
+    }
     return (
       <Animated.View
         style={[
@@ -141,23 +147,30 @@ const PropertyFilterBar = () => {
           },
         ]}>
         <Text style={styles.modalTitle}>
-          Select {activeFilter.charAt(0).toUpperCase() + activeFilter.slice(1)}
+          {t('filterKeys.' + activeFilter) ||
+            'Select ' +
+              activeFilter.charAt(0).toUpperCase() +
+              activeFilter.slice(1)}
         </Text>
-
         <FlatList
           data={data}
           keyExtractor={item =>
             isSortBy ? (item as any).value : item.toString()
           }
           renderItem={({item}) => {
-            const label = isSortBy ? (item as any).label : item.toString();
+            let label = isSortBy
+              ? t((item as any).label)
+              : isType
+              ? t('propertyTypes.' + item.toLowerCase?.())
+              : isStatus
+              ? t('cards.' + item)
+              : item.toString();
             const val = isSortBy ? (item as any).value : item;
             const selected = isSortBy
               ? filters.sortBy === val
               : isType && Array.isArray(filters.type)
               ? filters.type.includes(val)
               : filters[activeFilter] === val;
-
             return (
               <TouchableOpacity
                 style={[
@@ -173,17 +186,19 @@ const PropertyFilterBar = () => {
             );
           }}
         />
-
         <TouchableOpacity style={styles.modalClose} onPress={closeModal}>
-          <Text style={styles.modalCloseText}>{isType ? 'Done' : 'Close'}</Text>
+          <Text style={styles.modalCloseText}>
+            {isType ? t('close', 'Done') : t('close', 'Close')}
+          </Text>
         </TouchableOpacity>
       </Animated.View>
     );
   };
 
-  const sortByLabel =
+  const sortByLabel = t(
     FILTER_OPTIONS.sortBy.find(o => o.value === filters.sortBy)?.label ||
-    'Sort By';
+      'sortOptions.price_asc',
+  );
 
   return (
     <View style={styles.container}>
@@ -200,25 +215,39 @@ const PropertyFilterBar = () => {
       <View style={styles.filterRow}>
         <FilterButton label={sortByLabel} onPress={() => openModal('sortBy')} />
         <FilterButton
-          label={filters.bedrooms ? `${filters.bedrooms} bedrooms` : 'bedrooms'}
+          label={
+            filters.bedrooms
+              ? `${filters.bedrooms} ${t('filterKeys.bedrooms')}`
+              : t('filterKeys.bedrooms')
+          }
           onPress={() => openModal('bedrooms')}
         />
         <FilterButton
           label={
-            filters.bathrooms ? `${filters.bathrooms} bathrooms` : 'bathrooms'
+            filters.bathrooms
+              ? `${filters.bathrooms} ${t('filterKeys.bathrooms')}`
+              : t('filterKeys.bathrooms')
           }
           onPress={() => openModal('bathrooms')}
         />
         <FilterButton
           label={
             Array.isArray(filters.type) && filters.type.length > 0
-              ? filters.type.join(', ')
-              : 'Type'
+              ? filters.type
+                  .map((type: string) =>
+                    t('propertyTypes.' + type.toLowerCase?.()),
+                  )
+                  .join(', ')
+              : t('filterKeys.type')
           }
           onPress={() => openModal('type')}
         />
         <FilterButton
-          label={filters.status || 'Status'}
+          label={
+            filters.status
+              ? t('cards.' + filters.status)
+              : t('filterKeys.status')
+          }
           onPress={() => openModal('status')}
         />
       </View>
@@ -230,9 +259,22 @@ const PropertyFilterBar = () => {
             (!Array.isArray(value) && value)) ? (
             <View key={key} style={styles.activeFilterChip}>
               <Text style={styles.activeFilterText}>{`${
+                t('filterKeys.' + key) ||
                 key.charAt(0).toUpperCase() + key.slice(1)
               }: ${
-                Array.isArray(value) ? value.join(', ') : value?.value || value
+                Array.isArray(value)
+                  ? value
+                      .map((v: string) =>
+                        key === 'type'
+                          ? t('propertyTypes.' + v.toLowerCase?.())
+                          : key === 'status'
+                          ? t('cards.' + v)
+                          : v,
+                      )
+                      .join(', ')
+                  : key === 'status'
+                  ? t('cards.' + value)
+                  : value?.value || value
               }`}</Text>
               <TouchableOpacity onPress={() => handleClearFilter(key)}>
                 <Text style={styles.activeFilterClear}>×</Text>

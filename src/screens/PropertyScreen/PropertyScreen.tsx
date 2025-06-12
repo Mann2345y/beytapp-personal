@@ -1,19 +1,46 @@
 import React from 'react';
-import {View, FlatList, Text, StyleSheet} from 'react-native';
+import {
+  View,
+  FlatList,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import {usePropertyContext} from '../../context/PropertyContext';
 import PropertyCard from '../../components/Properties/PropertyCard';
 import PropertyFilterBar from '../../components/Properties/PropertyFilterBar';
 import PropertyDetailsScreen from './PropertyDetailsScreen';
 import PropertyCardSkeleton from '../../components/Properties/PropertyCardSkeleton';
+import {useTranslation} from 'react-i18next';
+import LanguageSwitchDropdown from '../../components/Reusables/LanguageSwitchDropdown';
 
 const PropertyScreen: React.FC = () => {
-  const {properties, loading, error} = usePropertyContext();
+  const {t} = useTranslation();
+  const {
+    properties,
+    loading,
+    error,
+    fetchMore,
+    hasMore,
+    setFilters,
+    isFetchingMore,
+  } = usePropertyContext();
+
   const [selectedProperty, setSelectedProperty] = React.useState<any>(null);
   const [modalVisible, setModalVisible] = React.useState(false);
 
+  const handleEndReached = () => {
+    if (hasMore && !isFetchingMore && !loading) {
+      fetchMore();
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <PropertyFilterBar />
+      <View style={styles.languageSwitcherWrapper}>
+        <LanguageSwitchDropdown />
+      </View>
+      <PropertyFilterBar setFilters={setFilters} />
       {loading ? (
         <FlatList
           data={Array.from({length: 6})}
@@ -25,9 +52,9 @@ const PropertyScreen: React.FC = () => {
         <View style={styles.centered}>
           <Text style={styles.errorText}>{error}</Text>
         </View>
-      ) : !properties || properties.length === 0 ? (
+      ) : !properties.length ? (
         <View style={styles.centered}>
-          <Text>No properties found.</Text>
+          <Text>{t('propertyListings.noPropertiesFound')}</Text>
         </View>
       ) : (
         <FlatList
@@ -43,6 +70,15 @@ const PropertyScreen: React.FC = () => {
             />
           )}
           contentContainerStyle={styles.flatListContent}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.2}
+          ListFooterComponent={
+            isFetchingMore && hasMore ? (
+              <View style={styles.footer}>
+                <ActivityIndicator size="small" />
+              </View>
+            ) : null
+          }
         />
       )}
       <PropertyDetailsScreen
@@ -67,6 +103,12 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 16,
   },
+  footer: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  languageSwitcherWrapper: {padding: 12, alignItems: 'flex-end'},
 });
 
 export default PropertyScreen;

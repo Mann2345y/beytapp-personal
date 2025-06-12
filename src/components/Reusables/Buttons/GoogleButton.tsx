@@ -3,6 +3,7 @@ import {TouchableOpacity, Text, StyleSheet, Alert} from 'react-native';
 import {authorize} from 'react-native-app-auth';
 import {useUser} from '../../../context/UserContext';
 import api from '../../../api/axiosConfig';
+import {ROUTES} from '../../../constants/routes';
 
 const config = {
   issuer: 'https://accounts.google.com',
@@ -28,7 +29,7 @@ export default function GoogleSignInButton() {
         return Alert.alert('Error', 'No idToken returned');
       }
 
-      const response = await api.get('/auth/google-app-callback', {
+      const response = await api.get(ROUTES.GOOGLE_APP_CALLBACK, {
         params: {idToken},
       });
 
