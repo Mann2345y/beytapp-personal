@@ -4,6 +4,7 @@ export const ROUTES = {
   GOOGLE_CALLBACK: '/auth/google-callback',
   AUTH_SIGNUP: '/auth/signup',
   LOCATIONS: '/locations',
+  GET_PROPERTY_TYPES: '/propertyTypes',
   SEND_OTP: '/auth/send-otp',
   VERIFY_OTP: '/auth/verify-otp',
   RESET_PASSWORD: '/auth/reset-password',

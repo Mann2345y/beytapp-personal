@@ -1,7 +1,6 @@
 import React, {useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {
-  SafeAreaView,
   View,
   Text,
   TextInput,
@@ -18,6 +17,8 @@ import PhoneNumberInput from '../Reusables/Inputs/PhoneNumberInput';
 import {useUser} from '../../context/UserContext';
 import GoogleSignInButton from '../Reusables/Buttons/GoogleButton';
 import {ROUTES} from '../../constants/routes';
+import LanguageSwitchDropdown from '../Reusables/LanguageSwitchDropdown';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 type FormData = {
   email: string;
@@ -116,7 +117,10 @@ const AuthFormScreen: React.FC<AuthFormScreenProps> = ({setShowForgot}) => {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <View style={styles.languageSwitcherWrapper}>
+        <LanguageSwitchDropdown />
+      </View>{' '}
       <ScrollView contentContainerStyle={styles.container}>
         {!hasUserProceeded ? (
           <View style={styles.step1}>
@@ -336,6 +340,7 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   linkText: {color: '#007BFF', textAlign: 'right', marginBottom: 12},
+  languageSwitcherWrapper: {padding: 12, alignItems: 'flex-end'},
 });
 
 export default AuthFormScreen;

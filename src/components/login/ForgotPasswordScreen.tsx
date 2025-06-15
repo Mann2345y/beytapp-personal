@@ -12,8 +12,11 @@ import {useForm, Controller, FormProvider} from 'react-hook-form';
 import {useTranslation} from 'react-i18next';
 import api from '../../api/axiosConfig';
 import {ROUTES} from '../../constants/routes';
+import LanguageSwitchDropdown from '../Reusables/LanguageSwitchDropdown';
+import {useNavigation} from '@react-navigation/native';
 
 const ForgotPasswordScreen: React.FC<{goBack?: any}> = ({goBack}) => {
+  const navigation = useNavigation();
   const {t} = useTranslation();
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
@@ -88,8 +91,17 @@ const ForgotPasswordScreen: React.FC<{goBack?: any}> = ({goBack}) => {
 
   return (
     <FormProvider {...methods}>
+      <View style={styles.languageSwitcherWrapper}>
+        <LanguageSwitchDropdown />
+      </View>
+
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.box}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => (goBack ? goBack() : navigation.goBack())}>
+            <Text style={styles.backButtonText}>{'←'}</Text>
+          </TouchableOpacity>
           <Text style={styles.heading}>{t('dashboard.resetPassword')}</Text>
           {!!error && (
             <View style={styles.errorBox}>
@@ -313,6 +325,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  languageSwitcherWrapper: {padding: 12, alignItems: 'flex-end'},
+  backButton: {
+    position: 'relative',
+    padding: 8,
+  },
+  backButtonText: {
+    fontSize: 42,
+    color: '#059669',
   },
 });
 

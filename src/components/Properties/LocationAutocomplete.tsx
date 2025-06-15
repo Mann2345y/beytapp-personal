@@ -5,14 +5,22 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ScrollView,
 } from 'react-native';
 import {useQuery} from '@tanstack/react-query';
 import api from '../../api/axiosConfig';
 import {ROUTES} from '../../constants/routes';
 
+// Update the prop type for LocationAutocomplete to accept the full location object
 interface LocationAutocompleteProps {
   value: string;
-  onSelect: (loc: {city: string; country: string}) => void;
+  onSelect: (loc: {
+    city: string;
+    country: string;
+    lat: number;
+    lng: number;
+    propertyCount: number;
+  }) => void;
   onClear: () => void;
 }
 
@@ -70,7 +78,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   };
 
   return (
-    <View style={{position: 'relative'}}>
+    <View style={styles.container}>
       <View style={styles.searchBarContainer}>
         <TextInput
           ref={inputRef}
@@ -92,16 +100,18 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
       </View>
       {showDropdown && (
         <View style={styles.dropdown}>
-          {filteredLocations.map((loc, idx) => (
-            <TouchableOpacity
-              key={loc.city + loc.country + idx}
-              style={styles.dropdownItem}
-              onPress={() => handleSelect(loc)}>
-              <Text style={styles.dropdownItemText}>
-                {loc.city}, {loc.country}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          <ScrollView keyboardShouldPersistTaps="handled">
+            {filteredLocations.map((loc, idx) => (
+              <TouchableOpacity
+                key={loc.city + loc.country + idx}
+                style={styles.dropdownItem}
+                onPress={() => handleSelect(loc)}>
+                <Text style={styles.dropdownItemText}>
+                  {loc.city}, {loc.country}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       )}
     </View>
@@ -109,6 +119,9 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
 };
 
 const styles = StyleSheet.create({
+  container: {
+    position: 'relative',
+  },
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',

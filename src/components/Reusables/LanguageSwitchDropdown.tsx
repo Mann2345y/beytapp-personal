@@ -1,6 +1,7 @@
 import React from 'react';
 import {useTranslation} from 'react-i18next';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {changeLanguage} from '../../utils/changeLanguage';
 
 const LANGUAGES = [
   {code: 'en', label: 'English'},
@@ -8,39 +9,28 @@ const LANGUAGES = [
 ];
 
 const LanguageSwitchDropdown = ({style}: {style?: any}) => {
-  const {i18n, t} = useTranslation();
-  const [open, setOpen] = React.useState(false);
+  const {i18n} = useTranslation();
+  const currentLang = i18n.language;
+  const isEnglish = currentLang === 'en';
+  // Button text: show in target language
+  const buttonText = isEnglish ? 'التبديل إلى العربية' : 'Switch to English';
+  const targetLang = isEnglish ? 'ar' : 'en';
 
-  const handleChange = (lng: string) => {
-    i18n.changeLanguage(lng);
-    setOpen(false);
+  const handleChange = async () => {
+    await changeLanguage(targetLang);
   };
 
   return (
     <View style={[styles.container, style]}>
-      <TouchableOpacity onPress={() => setOpen(!open)} style={styles.button}>
-        <Text style={styles.buttonText}>
-          {t('language') || i18n.language.toUpperCase()}
-        </Text>
+      <TouchableOpacity onPress={handleChange} style={styles.button}>
+        <Text style={styles.buttonText}>{buttonText}</Text>
       </TouchableOpacity>
-      {open && (
-        <View style={styles.dropdown}>
-          {LANGUAGES.map(lng => (
-            <TouchableOpacity
-              key={lng.code}
-              onPress={() => handleChange(lng.code)}
-              style={styles.dropdownItem}>
-              <Text style={styles.dropdownText}>{lng.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {position: 'relative', zIndex: 100},
+  container: {position: 'relative', zIndex: 100, maxWidth: 180},
   button: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -49,24 +39,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#cbd5e1',
   },
-  buttonText: {fontSize: 14, color: '#334155'},
-  dropdown: {
-    position: 'absolute',
-    top: 38,
-    left: 0,
-    backgroundColor: '#fff',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    minWidth: 100,
-  },
-  dropdownItem: {padding: 10},
-  dropdownText: {fontSize: 14, color: '#334155'},
+  buttonText: {fontSize: 14, color: '#334155', textAlign: 'center'},
 });
 
 export default LanguageSwitchDropdown;

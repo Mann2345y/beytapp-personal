@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {usePropertyContext} from '../../context/PropertyContext';
 import PropertyCard from '../../components/Properties/PropertyCard';
 import PropertyFilterBar from '../../components/Properties/PropertyFilterBar';
@@ -36,7 +37,7 @@ const PropertyScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.languageSwitcherWrapper}>
         <LanguageSwitchDropdown />
       </View>
@@ -87,7 +88,7 @@ const PropertyScreen: React.FC = () => {
         propertyData={selectedProperty}
         loading={!selectedProperty}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 

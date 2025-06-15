@@ -1,19 +1,20 @@
+/* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import PropertyScreen from '../screens/PropertyScreen/PropertyScreen';
 import LoginScreen from '../screens/LoginScreen/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import AddPropertyScreen from '../screens/AddPropertyScreen';
-// Make sure these imports work! (see note below)
 import PropertyIcon from '../assets/images/property.svg';
 import DashboardIcon from '../assets/images/dashboard.svg';
 import LoginIcon from '../assets/images/login.svg';
-import PlaceholderIcon from '../assets/images/PlaceholderIcon';
+import AddPropertyIcon from '../assets/images/add-property.svg';
 import {useUser} from '../context/UserContext';
-import {ActivityIndicator, View, StyleSheet} from 'react-native';
+import {ActivityIndicator, View, StyleSheet, Text} from 'react-native';
 import {TouchableOpacity} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useTranslation} from 'react-i18next';
+import {useNavigation} from '@react-navigation/native';
 
 const Tab = createBottomTabNavigator();
 
@@ -23,6 +24,31 @@ const loadingStyle = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fff',
+  },
+});
+
+const gradientTabBarButtonStyle = StyleSheet.create({
+  touchable: {
+    flex: 1,
+    position: 'absolute',
+    bottom: 26, // pop out from bottom
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  gradient: {
+    width: 140,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 6,
   },
 });
 
@@ -37,36 +63,38 @@ const tabBarIcon =
     } else if (routeName === 'Dashboard') {
       return <DashboardIcon width={size} height={size} fill={color} />;
     } else if (routeName === 'Add property') {
-      // Gradient highlight handled in tabBarButton below
-      return <PlaceholderIcon size={size} />;
+      return (
+        <AddPropertyIcon width={size * 0.8} height={size * 0.8} fill="#fff" />
+      );
     }
     return null;
   };
 
-// Custom tab bar button for gradient highlight
-type GradientTabBarButtonProps = {
-  children: React.ReactNode;
-  accessibilityState: {selected: boolean};
-  onPress?: () => void;
-};
-
 const GradientTabBarButton = (props: any) => {
-  const {children, accessibilityState, onPress} = props;
+  const {user} = useUser();
+  const navigation = useNavigation<any>();
+  const {children, accessibilityState} = props;
   const focused = accessibilityState?.selected;
+  const handlePress = () => {
+    if (!user) {
+      navigation.navigate('Login');
+    } else {
+      navigation.navigate('Add property');
+    }
+  };
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={{flex: 1}}>
+    <TouchableOpacity
+      onPress={handlePress}
+      activeOpacity={0.8}
+      style={gradientTabBarButtonStyle.touchable}>
       <LinearGradient
         colors={['#059669', '#10b981']}
         start={{x: 0, y: 0}}
         end={{x: 1, y: 0}}
-        style={{
-          flex: 1,
-          borderRadius: 16,
-          margin: 6,
-          justifyContent: 'center',
-          alignItems: 'center',
-          opacity: focused ? 1 : 0.7,
-        }}>
+        style={[
+          gradientTabBarButtonStyle.gradient,
+          {opacity: focused ? 1 : 0.7},
+        ]}>
         {children}
       </LinearGradient>
     </TouchableOpacity>
@@ -76,17 +104,28 @@ const GradientTabBarButton = (props: any) => {
 const tabScreenOptions = (route: any, t: any) => {
   const options: any = {
     tabBarIcon: tabBarIcon(route.name),
-    headerShown: true,
-    tabBarLabel: t(
-      route.name === 'Property'
-        ? 'header.properties'
-        : route.name === 'Add property'
-        ? 'header.addProperty'
-        : route.name === 'Dashboard'
-        ? 'userOptions.dashboard'
-        : route.name === 'Login'
-        ? 'header.login'
-        : route.name,
+    headerShown: false,
+    tabBarLabel: ({color}: {color: string}) => (
+      <Text
+        style={[
+          {
+            fontSize: route.name === 'Add property' ? 15 : 12,
+            fontWeight: '700',
+          },
+          route.name === 'Add property' ? {color: '#fff'} : {color},
+        ]}>
+        {t(
+          route.name === 'Property'
+            ? 'header.properties'
+            : route.name === 'Add property'
+            ? 'header.addProperty'
+            : route.name === 'Dashboard'
+            ? 'userOptions.dashboard'
+            : route.name === 'Login'
+            ? 'header.login'
+            : route.name,
+        )}
+      </Text>
     ),
   };
   if (route.name === 'Add property') {
