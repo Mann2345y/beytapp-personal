@@ -31,3 +31,30 @@ export const signup = async ({name, email, phoneNumber, password}) => {
   });
   return res.data;
 };
+
+export const fetchPropertiesOfLoggedUser = async userId => {
+  try {
+    const response = await api.get(
+      `${ROUTES.PROPERTIES}?userId=${userId ?? ''}`,
+    );
+    return response?.data?.properties;
+  } catch (error) {
+    console.error('Error fetching properties:', error);
+    throw error;
+  }
+};
+
+export const toggleListingInSavedListings = async (userId, propertyId) => {
+  const {data} = await api.post(ROUTES.ADD_TO_SAVED_LISTINGS, {
+    userId,
+    propertyId,
+  });
+  return data;
+};
+
+export const fetchFavorites = async userId => {
+  const {data} = await api.get(
+    `${ROUTES.GET_USER_SAVED_LISTINGS}?userId=${userId}`,
+  );
+  return data;
+};

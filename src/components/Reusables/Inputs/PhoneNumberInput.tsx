@@ -1,5 +1,6 @@
 import React from 'react';
-import {View, TextInput, StyleSheet, Text, Picker} from 'react-native';
+import {View, TextInput, StyleSheet, Text} from 'react-native';
+import {Picker} from '@react-native-picker/picker';
 import {useController, useFormContext} from 'react-hook-form';
 
 // Dummy country codes for dropdown
@@ -30,11 +31,18 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({name, label}) => {
       <View style={styles.row}>
         <View style={styles.codeBox}>
           <Picker
-            selectedValue={codeValue}
+            selectedValue={codeValue || COUNTRY_CODES[0].value}
             style={styles.picker}
-            onValueChange={onCodeChange}>
+            onValueChange={onCodeChange}
+            dropdownIconColor="#334155"
+            mode="dropdown">
             {COUNTRY_CODES.map(c => (
-              <Picker.Item key={c.value} label={c.label} value={c.value} />
+              <Picker.Item
+                key={c.value}
+                label={c.label}
+                value={c.value}
+                color="#334155"
+              />
             ))}
           </Picker>
         </View>
@@ -70,23 +78,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   codeBox: {
-    width: 90,
+    width: 120,
+    height: 60,
     marginRight: 8,
     borderWidth: 1,
     borderColor: '#cbd5e1',
     borderRadius: 8,
     backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    paddingLeft: 4, // for slight spacing inside box
   },
   picker: {
     width: '100%',
-    height: 44,
+    height: 60,
+    color: '#334155',
+    fontSize: 15,
   },
   input: {
     flex: 1,
+    height: 60,
     borderWidth: 1,
     borderColor: '#cbd5e1',
     borderRadius: 8,
-    padding: 10,
+    paddingHorizontal: 12,
     fontSize: 15,
     backgroundColor: '#f1f5f9',
   },

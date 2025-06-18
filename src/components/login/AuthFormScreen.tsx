@@ -80,8 +80,13 @@ const AuthFormScreen: React.FC<AuthFormScreenProps> = ({setShowForgot}) => {
         email: form.email,
         password: form.password,
       });
-      loginUser(res);
-      navigation.reset({index: 0, routes: [{name: 'Property' as never}]});
+      const {token} = res.data;
+      if (token) {
+        await loginUser({token});
+        navigation.reset({index: 0, routes: [{name: 'Property' as never}]});
+      } else {
+        throw new Error('No session token returned');
+      }
     } catch (err: any) {
       Alert.alert('Login failed', err.response?.data?.error || err.message);
     }
@@ -100,8 +105,13 @@ const AuthFormScreen: React.FC<AuthFormScreenProps> = ({setShowForgot}) => {
         phoneNumber: phone,
         password: form.password,
       });
-      loginUser(res);
-      navigation.reset({index: 0, routes: [{name: 'Property'}]});
+      const {token} = res.data;
+      if (token) {
+        await loginUser({token});
+        navigation.reset({index: 0, routes: [{name: 'Property' as never}]});
+      } else {
+        throw new Error('No session token returned');
+      }
     } catch (err: any) {
       Alert.alert('Signup failed', err.response?.data?.message || err.message);
     }

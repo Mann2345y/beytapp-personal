@@ -110,6 +110,8 @@ export const UserProvider = ({children}: {children: React.ReactNode}) => {
     setUser(null);
   };
 
+  console.log(user?._id);
+
   return (
     <UserContext.Provider
       value={{user, loginUser, logoutUser, fetchingUserData}}>

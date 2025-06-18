@@ -1,5 +1,11 @@
-import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import React, {useRef} from 'react';
+import {
+  Text,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  View,
+} from 'react-native';
 import {useFormContext, useController} from 'react-hook-form';
 import {RichEditor, RichToolbar, actions} from 'react-native-pell-rich-editor';
 
@@ -16,22 +22,29 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 }) => {
   const {control} = useFormContext();
   const {
-    field: {onChange, value},
+    field: {onChange, value, onBlur},
     fieldState: {error},
   } = useController({name, control});
-  const richText = React.useRef<RichEditor>(null);
+  const richText = useRef<RichEditor>(null);
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <RichEditor
-        ref={richText}
-        initialContentHTML={value || ''}
-        onChange={onChange}
-        placeholder={placeholder || 'Enter description...'}
-        style={styles.editor}
-        editorStyle={styles.editorBg}
-      />
+      <View style={styles.editorWrapper}>
+        <RichEditor
+          ref={richText}
+          initialContentHTML={value || ''}
+          onChange={onChange}
+          onBlur={onBlur}
+          placeholder={placeholder || 'Enter description...'}
+          style={styles.editor}
+          editorStyle={styles.editorBg}
+          useContainer={true}
+          pasteAsPlainText={true}
+        />
+      </View>
       <RichToolbar
         editor={richText}
         actions={[
@@ -45,13 +58,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         style={styles.toolbar}
       />
       {error && <Text style={styles.errorText}>{error.message}</Text>}
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {marginBottom: 16},
   label: {fontSize: 15, color: '#334155', marginBottom: 4},
+  editorWrapper: {borderRadius: 8, overflow: 'hidden'},
   editor: {
     minHeight: 120,
     borderWidth: 1,

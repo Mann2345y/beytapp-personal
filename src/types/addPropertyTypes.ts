@@ -9,6 +9,7 @@ export interface LocationType {
 export interface AddPropertyFormValues {
   locations: LocationType | null;
   type: string | null;
+  status: 'sale' | 'rent' | null; // Added status field
   price: number | null;
   bedrooms: number | null;
   bathrooms: number | null;

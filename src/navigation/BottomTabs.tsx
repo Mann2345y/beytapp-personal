@@ -3,7 +3,6 @@ import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import PropertyScreen from '../screens/PropertyScreen/PropertyScreen';
 import LoginScreen from '../screens/LoginScreen/LoginScreen';
-import DashboardScreen from '../screens/DashboardScreen';
 import AddPropertyScreen from '../screens/AddPropertyScreen';
 import PropertyIcon from '../assets/images/property.svg';
 import DashboardIcon from '../assets/images/dashboard.svg';
@@ -15,6 +14,7 @@ import {TouchableOpacity} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useTranslation} from 'react-i18next';
 import {useNavigation} from '@react-navigation/native';
+import DashboardStack from '../navigation/DashboardStack';
 
 const Tab = createBottomTabNavigator();
 
@@ -73,8 +73,7 @@ const tabBarIcon =
 const GradientTabBarButton = (props: any) => {
   const {user} = useUser();
   const navigation = useNavigation<any>();
-  const {children, accessibilityState} = props;
-  const focused = accessibilityState?.selected;
+  const {children} = props;
   const handlePress = () => {
     if (!user) {
       navigation.navigate('Login');
@@ -85,16 +84,13 @@ const GradientTabBarButton = (props: any) => {
   return (
     <TouchableOpacity
       onPress={handlePress}
-      activeOpacity={0.8}
+      activeOpacity={1}
       style={gradientTabBarButtonStyle.touchable}>
       <LinearGradient
         colors={['#059669', '#10b981']}
         start={{x: 0, y: 0}}
         end={{x: 1, y: 0}}
-        style={[
-          gradientTabBarButtonStyle.gradient,
-          {opacity: focused ? 1 : 0.7},
-        ]}>
+        style={gradientTabBarButtonStyle.gradient}>
         {children}
       </LinearGradient>
     </TouchableOpacity>
@@ -151,7 +147,7 @@ const BottomTabs = () => {
       <Tab.Screen name="Property" component={PropertyScreen} />
       <Tab.Screen name="Add property" component={AddPropertyScreen} />
       {user ? (
-        <Tab.Screen name="Dashboard" component={DashboardScreen} />
+        <Tab.Screen name="Dashboard" component={DashboardStack} />
       ) : (
         <Tab.Screen name="Login" component={LoginScreen} />
       )}

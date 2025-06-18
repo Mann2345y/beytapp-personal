@@ -43,11 +43,24 @@ interface PropertyCardProps {
   property: any;
   cardType?: string;
   onPress?: () => void;
+  showEditDelete?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  showRemoveSaved?: boolean;
+  onRemoveSaved?: () => void;
 }
 
 const {width} = Dimensions.get('window');
 
-const PropertyCard: React.FC<PropertyCardProps> = ({property, onPress}) => {
+const PropertyCard: React.FC<PropertyCardProps> = ({
+  property,
+  onPress,
+  showEditDelete,
+  onEdit,
+  onDelete,
+  showRemoveSaved,
+  onRemoveSaved,
+}) => {
   console.log({property});
   const {t, i18n} = useTranslation();
   const isArabic = i18n.language === 'ar';
@@ -136,6 +149,27 @@ const PropertyCard: React.FC<PropertyCardProps> = ({property, onPress}) => {
         <Text style={styles.location}>
           {t(`locations.${property?.location?.city}`)}
         </Text>
+        {showEditDelete && (
+          <View style={styles.editDeleteRow}>
+            <TouchableOpacity onPress={onEdit} style={styles.editButton}>
+              <Text style={styles.editDeleteText}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+              <Text style={styles.editDeleteText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {showRemoveSaved && (
+          <View style={styles.editDeleteRow}>
+            <TouchableOpacity
+              onPress={onRemoveSaved}
+              style={styles.deleteButton}>
+              <Text style={styles.editDeleteText}>
+                {t('removeSavedListing') || 'Remove from saved'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -225,6 +259,26 @@ const styles = StyleSheet.create({
   location: {
     color: '#64748b',
     fontSize: 13,
+  },
+  editDeleteRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 8,
+  },
+  editButton: {
+    marginRight: 12,
+    padding: 6,
+    backgroundColor: '#fbbf24',
+    borderRadius: 6,
+  },
+  deleteButton: {
+    padding: 6,
+    backgroundColor: '#ef4444',
+    borderRadius: 6,
+  },
+  editDeleteText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 

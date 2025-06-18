@@ -4,12 +4,9 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Modal,
-  Pressable,
   StyleSheet,
 } from 'react-native';
 import {useForm, Controller, FormProvider} from 'react-hook-form';
@@ -18,18 +15,19 @@ import MultiTagInput from '../components/Reusables/Inputs/MultiTagInput';
 import FileUpload from '../components/Reusables/FileUpload';
 import {useCommonData} from '../context/CommonDataContext';
 import {AddPropertyFormValues} from '../types/addPropertyTypes';
-import axiosInstance from '../api/axiosConfig';
 import {translateText, detectLanguage} from '../utils/translation';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {uploadImagesCall} from '../utils/cloudinary';
 
 const AddPropertyScreen = () => {
   const {propertyTypes} = useCommonData();
   const [isLoading, setIsLoading] = useState(false);
-  const [isTypePickerVisible, setTypePickerVisible] = useState(false);
 
   const methods = useForm<AddPropertyFormValues>({
     defaultValues: {
       locations: null,
       type: null,
+      status: null, // Added status default
       price: null,
       bedrooms: null,
       bathrooms: null,
@@ -39,47 +37,6 @@ const AddPropertyScreen = () => {
       images: [],
     },
   });
-
-  const uploadImage = async (file: any) => {
-    const folder = 'uploads';
-    if (!file) throw new Error('No file provided for upload.');
-
-    const fileNameWithoutExt = file.split('/').pop().split('.')[0];
-    const publicId = `${folder}/${fileNameWithoutExt}`;
-    const signatureRes = await axiosInstance.post(
-      '/upload/generate-signature',
-      {
-        folder,
-        public_id: publicId,
-      },
-    );
-    const {signature, timestamp, apiKey, cloudName} = signatureRes.data;
-    const formData = new FormData();
-    formData.append('file', {
-      uri: file,
-      type: 'image/jpeg',
-      name: file.split('/').pop(),
-    });
-    formData.append('api_key', apiKey);
-    formData.append('timestamp', timestamp.toString());
-    formData.append('folder', folder);
-    formData.append('public_id', publicId);
-    formData.append('signature', signature);
-    const cloudinaryUploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
-    const uploadRes = await axiosInstance.post(cloudinaryUploadUrl, formData, {
-      headers: {'Content-Type': 'multipart/form-data'},
-    });
-    return uploadRes.data.secure_url;
-  };
-
-  const uploadImagesCall = async (images: any) => {
-    const urls = [];
-    for (const img of images) {
-      const url = await uploadImage(img);
-      urls.push(url);
-    }
-    return urls;
-  };
 
   const ARABIC_TO_LATIN: Record<string, string> = {
     '٠': '0',
@@ -209,10 +166,11 @@ const AddPropertyScreen = () => {
     <FormProvider {...methods}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{flex: 1, backgroundColor: '#fff'}}>
+        style={styles.keyboardAvoidingView}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <SafeAreaView style={styles.container}>
+          <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
             <Text style={styles.title}>Add Property</Text>
+            <Text style={styles.label}>Location</Text>
 
             <Controller
               control={methods.control}
@@ -226,58 +184,61 @@ const AddPropertyScreen = () => {
               )}
             />
 
+            {/* Status Chips */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Type</Text>
-              <TouchableOpacity
-                style={styles.input}
-                onPress={() => setTypePickerVisible(true)}>
-                <Text>{methods.watch('type') || 'Select type'}</Text>
-              </TouchableOpacity>
+              <Text style={styles.label}>Status</Text>
+              <View style={styles.chipContainer}>
+                {['sale', 'rent'].map(option => (
+                  <TouchableOpacity
+                    key={option}
+                    style={[
+                      styles.chip,
+                      methods.watch('status') === option &&
+                        styles.chipSelectedGradient,
+                    ]}
+                    onPress={() =>
+                      methods.setValue('status', option as 'sale' | 'rent')
+                    }>
+                    <Text
+                      style={[
+                        styles.chipText,
+                        methods.watch('status') === option &&
+                          styles.chipTextSelected,
+                      ]}>
+                      {option.charAt(0).toUpperCase() + option.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
 
-            <Modal
-              visible={isTypePickerVisible}
-              transparent
-              animationType="slide">
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <Text style={[styles.label, {marginBottom: 12}]}>
-                    Select Property Type
-                  </Text>
-                  <View style={styles.chipContainer}>
-                    {propertyTypes &&
-                      Array.isArray(propertyTypes) &&
-                      propertyTypes.map(type => (
-                        <TouchableOpacity
-                          key={String(type)}
-                          style={[
-                            styles.chip,
-                            methods.watch('type') === String(type) &&
-                              styles.chipSelected,
-                          ]}
-                          onPress={() => {
-                            methods.setValue('type', String(type));
-                            setTypePickerVisible(false);
-                          }}>
-                          <Text
-                            style={[
-                              styles.chipText,
-                              methods.watch('type') === String(type) &&
-                                styles.chipTextSelected,
-                            ]}>
-                            {String(type)}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                  </View>
-                  <Pressable
-                    onPress={() => setTypePickerVisible(false)}
-                    style={styles.modalClose}>
-                    <Text style={{color: 'white'}}>Close</Text>
-                  </Pressable>
-                </View>
+            {/* Type Chips */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Type</Text>
+              <View style={styles.chipContainer}>
+                {propertyTypes &&
+                  Array.isArray(propertyTypes) &&
+                  propertyTypes.map(type => (
+                    <TouchableOpacity
+                      key={String(type)}
+                      style={[
+                        styles.chip,
+                        methods.watch('type') === String(type) &&
+                          styles.chipSelectedGradient,
+                      ]}
+                      onPress={() => methods.setValue('type', String(type))}>
+                      <Text
+                        style={[
+                          styles.chipText,
+                          methods.watch('type') === String(type) &&
+                            styles.chipTextSelected,
+                        ]}>
+                        {String(type)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
               </View>
-            </Modal>
+            </View>
 
             {['price', 'bedrooms', 'bathrooms', 'area'].map(field => (
               <Controller
@@ -301,16 +262,37 @@ const AddPropertyScreen = () => {
               />
             ))}
 
-            <FileUpload
-              name="images"
-              label="Property Images"
-              placeholder="Select property images"
+            {/* Simple Description Text Input */}
+            <Controller
+              control={methods.control}
+              name="description"
+              render={({field: {onChange, value}, fieldState: {error}}) => (
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Description</Text>
+                  <TextInput
+                    style={[styles.input, styles.descriptionInput]}
+                    multiline
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="Enter description"
+                  />
+                  {error && (
+                    <Text style={styles.errorText}>{error.message}</Text>
+                  )}
+                </View>
+              )}
             />
 
             <MultiTagInput
               name="amenities"
               label="Amenities"
               placeholder="Add amenity"
+            />
+
+            <FileUpload
+              name="images"
+              label="Property Images"
+              placeholder="Select property images"
             />
 
             <TouchableOpacity
@@ -332,6 +314,10 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingBottom: 80,
     alignItems: 'center',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+    backgroundColor: '#fff',
   },
   container: {
     width: '100%',
@@ -364,6 +350,10 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 15,
     backgroundColor: '#f1f5f9',
+    minHeight: 40, // default minHeight
+  },
+  descriptionInput: {
+    minHeight: 60,
   },
   button: {
     backgroundColor: '#059669',
@@ -403,7 +393,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 4,
+    marginTop: 4,
     justifyContent: 'flex-start',
   },
   chip: {
@@ -420,6 +411,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#059669',
     borderColor: '#059669',
   },
+  chipSelectedGradient: {
+    // Simulate emerald-500 to 700 gradient using a solid color (React Native doesn't support gradients in StyleSheet)
+    backgroundColor: '#047857', // emerald-700
+    borderColor: '#059669', // emerald-500
+  },
   chipText: {
     color: '#334155',
     fontSize: 15,
@@ -427,6 +423,11 @@ const styles = StyleSheet.create({
   chipTextSelected: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    marginTop: 4,
   },
 });
 

@@ -11,4 +11,6 @@ export const ROUTES = {
   GOOGLE_APP_CALLBACK: '/auth/google-app-callback',
   GET_LOGGED_USER: '/users/get-logged-user',
   PROPERTIES: '/properties',
+  ADD_TO_SAVED_LISTINGS: '/users/save-listing',
+  GET_USER_SAVED_LISTINGS: '/users/saved-listings',
 };
