@@ -26,7 +26,7 @@ export default function GoogleSignInButton() {
       const authState = await authorize(config);
       const {idToken} = authState;
       if (!idToken) {
-        return Alert.alert('Error', 'No idToken returned');
+        return;
       }
 
       const response = await api.get(ROUTES.GOOGLE_APP_CALLBACK, {
@@ -42,7 +42,6 @@ export default function GoogleSignInButton() {
       }
     } catch (err: any) {
       console.error('Google Sign-In Error:', err);
-      Alert.alert('Login failed', err.message || 'Please try again');
     }
   };
 

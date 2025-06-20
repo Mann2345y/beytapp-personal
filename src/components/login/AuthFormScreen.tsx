@@ -62,16 +62,13 @@ const AuthFormScreen: React.FC<AuthFormScreenProps> = ({setShowForgot}) => {
 
   const onCheckExist = async () => {
     if (!email) {
-      Alert.alert('Error', 'Please enter an email');
       return;
     }
     try {
       const {data} = await api.get(ROUTES.CHECK_USER_EXISTS, {params: {email}});
       setUserExist(data.exists);
       setHasUserProceeded(true);
-    } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.message || err.message);
-    }
+    } catch (err: any) {}
   };
 
   const onLogin = async (form: FormData) => {
@@ -87,14 +84,11 @@ const AuthFormScreen: React.FC<AuthFormScreenProps> = ({setShowForgot}) => {
       } else {
         throw new Error('No session token returned');
       }
-    } catch (err: any) {
-      Alert.alert('Login failed', err.response?.data?.error || err.message);
-    }
+    } catch (err: any) {}
   };
 
   const onSignup = async (form: FormData) => {
     if (form.password !== form.confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
       return;
     }
     try {
@@ -112,9 +106,7 @@ const AuthFormScreen: React.FC<AuthFormScreenProps> = ({setShowForgot}) => {
       } else {
         throw new Error('No session token returned');
       }
-    } catch (err: any) {
-      Alert.alert('Signup failed', err.response?.data?.message || err.message);
-    }
+    } catch (err: any) {}
   };
 
   const goBack = () => {

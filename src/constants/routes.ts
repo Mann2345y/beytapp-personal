@@ -13,4 +13,5 @@ export const ROUTES = {
   PROPERTIES: '/properties',
   ADD_TO_SAVED_LISTINGS: '/users/save-listing',
   GET_USER_SAVED_LISTINGS: '/users/saved-listings',
+  ADD_PROPERTY: '/properties/create',
 };

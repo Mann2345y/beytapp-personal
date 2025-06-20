@@ -17,41 +17,20 @@ api.interceptors.request.use(
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log(
-      '[AXIOS][REQUEST]',
-      config.method?.toUpperCase(),
-      config.url,
-      config.data || config.params,
-    );
     return config;
   },
   error => {
-    console.log('[AXIOS][REQUEST][ERROR]', error);
+    console.log({error});
     return Promise.reject(error);
   },
 );
 
 api.interceptors.response.use(
   response => {
-    console.log(
-      '[AXIOS][RESPONSE]',
-      response.config.url,
-      response.status,
-      response.data,
-    );
     return response;
   },
   error => {
-    if (error.response) {
-      console.log(
-        '[AXIOS][RESPONSE][ERROR]',
-        error.response.config.url,
-        error.response.status,
-        error.response.data,
-      );
-    } else {
-      console.log('[AXIOS][RESPONSE][ERROR]', error.message);
-    }
+    console.log({error});
     return Promise.reject(error);
   },
 );

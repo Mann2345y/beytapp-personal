@@ -18,10 +18,15 @@ import {AddPropertyFormValues} from '../types/addPropertyTypes';
 import {translateText, detectLanguage} from '../utils/translation';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {uploadImagesCall} from '../utils/cloudinary';
+import {useMutation} from '@tanstack/react-query';
+import {createPropertyMutation} from '../utils/apiCalls';
+import {useNavigation} from '@react-navigation/native';
+import {useUser} from '../context/UserContext';
 
 const AddPropertyScreen = () => {
   const {propertyTypes} = useCommonData();
   const [isLoading, setIsLoading] = useState(false);
+  const {user} = useUser();
 
   const methods = useForm<AddPropertyFormValues>({
     defaultValues: {
@@ -35,6 +40,20 @@ const AddPropertyScreen = () => {
       amenities: [],
       description: '',
       images: [],
+    },
+  });
+
+  const navigation = useNavigation();
+
+  const {mutate: createProperty} = useMutation({
+    mutationFn: createPropertyMutation,
+    onSuccess: () => {
+      console.log('success triggered');
+      navigation.reset({index: 0, routes: [{name: 'Property' as never}]});
+      methods.reset();
+    },
+    onError: () => {
+      console.log('error triggered');
     },
   });
 
@@ -60,26 +79,34 @@ const AddPropertyScreen = () => {
     '۸': '8',
     '۹': '9',
   };
+
   const LATIN_TO_ARABIC: Record<string, string> = Object.entries(
     ARABIC_TO_LATIN,
   ).reduce((acc, [a, l]) => {
     acc[l] = a;
     return acc;
   }, {} as Record<string, string>);
+
   const convertArabicDigitsToLatin = (str: string) =>
     str.replace(/[\u0660-\u0669\u06F0-\u06F9]/g, d => ARABIC_TO_LATIN[d] || d);
+
   const convertLatinDigitsToArabic = (str: string) =>
     str.replace(/\d/g, d => LATIN_TO_ARABIC[d] || d);
+
   const isArabicDigits = (str: string) =>
     /[\u0660-\u0669\u06F0-\u06F9]/.test(str);
 
   const onSubmit = async (data: any) => {
+    console.log({data});
+
     if (!data.locations) {
-      console.log('Location is required');
+      console.log('Location is required [step1]');
       return;
     }
+
     try {
       setIsLoading(true);
+      console.log('Loading started [step2]');
       const dataToSend: any = {
         status: data.status || '',
         price: '',
@@ -93,13 +120,14 @@ const AddPropertyScreen = () => {
         sizeArabic: '',
         type: data.type || '',
         amenities: data.amenities || [],
-        userId: '',
+        userId: user?._id,
         title: '',
         titleArabic: '',
         description: '',
         descriptionArabic: '',
         images: [],
       };
+      console.log('Initialized dataToSend [step3]');
 
       if (isArabicDigits(String(data.price))) {
         dataToSend.priceArabic = data.price;
@@ -108,6 +136,7 @@ const AddPropertyScreen = () => {
         dataToSend.price = data.price;
         dataToSend.priceArabic = convertLatinDigitsToArabic(String(data.price));
       }
+      console.log('Processed price fields [step4]');
 
       if (isArabicDigits(String(data.area))) {
         dataToSend.sizeArabic = data.area;
@@ -116,6 +145,7 @@ const AddPropertyScreen = () => {
         dataToSend.size = data.area;
         dataToSend.sizeArabic = convertLatinDigitsToArabic(String(data.area));
       }
+      console.log('Processed area fields [step5]');
 
       if (isArabicDigits(String(data.bedrooms))) {
         dataToSend.bedroomsArabic = data.bedrooms;
@@ -126,6 +156,7 @@ const AddPropertyScreen = () => {
           String(data.bedrooms),
         );
       }
+      console.log('Processed bedrooms fields [step6]');
 
       if (isArabicDigits(String(data.bathrooms))) {
         dataToSend.bathroomsArabic = data.bathrooms;
@@ -138,6 +169,7 @@ const AddPropertyScreen = () => {
           String(data.bathrooms),
         );
       }
+      console.log('Processed bathrooms fields [step7]');
 
       const originalLang = detectLanguage(data.description);
       if (originalLang === 'ar') {
@@ -149,16 +181,23 @@ const AddPropertyScreen = () => {
         dataToSend.descriptionArabic =
           (await translateText(data.description, 'ar')) || data.description;
       }
+      console.log('Processed description fields [step8]');
 
       if (data.images?.length) {
         dataToSend.images = await uploadImagesCall(data.images);
+        console.log('Uploaded images [step9]');
       }
 
-      console.log('Property submitted! (API call not implemented)', dataToSend);
+      createProperty(dataToSend);
+      console.log(
+        'Property submitted! (API call not implemented) [step10]',
+        dataToSend,
+      );
     } catch (err) {
-      console.error(err);
+      console.error('Error occurred [step11]', {err});
     } finally {
       setIsLoading(false);
+      console.log('Loading finished [step12]');
     }
   };
 

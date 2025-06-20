@@ -36,6 +36,7 @@ const EditProfileScreen = () => {
   const [hasChanged, setHasChanged] = useState(false);
   const [userImage, setUserImage] = useState<string | null>(user?.image);
   const initialPhone = extractCountryCodeAndNumber(user?.phoneNumber || '');
+
   const methods = useForm({
     defaultValues: {
       name: user?.name || '',
@@ -55,7 +56,7 @@ const EditProfileScreen = () => {
         email: user.email || '',
         phoneNumber: resetPhone.phoneNumber,
         selectedCountryCode: resetPhone.selectedCountryCode,
-        image: user.image ? [user.image] : [],
+        image: user.image ? user.image : '',
       });
     }
   }, [user, methods]);
@@ -77,9 +78,10 @@ const EditProfileScreen = () => {
     if (!user) {
       return;
     }
+
     try {
       let imageUrl = user.image;
-      if (data.image && data.image[0] && !data.image[0].startsWith('http')) {
+      if (data.image && !data.image.startsWith('https')) {
         imageUrl = await uploadImage(data.image[0]);
       }
       const payload = {
@@ -89,9 +91,11 @@ const EditProfileScreen = () => {
         selectedCountryCode: data.selectedCountryCode,
         image: imageUrl,
       };
-      await api.put(`/users/${user.id}`, payload);
+      await api.put(`/users/${user._id}`, payload);
       setHasChanged(false);
-    } catch (err: any) {}
+    } catch (err: any) {
+      console.log('Error updating user:', {err});
+    }
   };
 
   const handlePickImage = async () => {

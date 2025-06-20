@@ -12,13 +12,34 @@ import {
 } from 'react-native';
 import HTMLView from 'react-native-htmlview';
 import {useTranslation} from 'react-i18next';
+import DefaultImageApartment from '../../assets/images/apartment.png';
+import DefaultImageBuilding from '../../assets/images/building.png';
+import DefaultImageChalet from '../../assets/images/chalet.png';
+import DefaultImageCommercial from '../../assets/images/commercial.png';
+import DefaultImageDuplex from '../../assets/images/duplex.png';
+import DefaultImageFarm from '../../assets/images/farm.png';
+import DefaultImageFloor from '../../assets/images/floor.png';
+import DefaultImageLand from '../../assets/images/land.png';
+import DefaultImageOffice from '../../assets/images/office.png';
+import DefaultImageStable from '../../assets/images/stable.jpg';
+import DefaultImageVilla from '../../assets/images/villa.png';
 
-const DEFAULT_IMAGES_FOR_TYPES = {
-  apartment: 'https://via.placeholder.com/600x400?text=Apartment',
-  villa: 'https://via.placeholder.com/600x400?text=Villa',
+export const FALLBACK_IMAGE_URL =
+  'https://images.pexels.com/photos/28216688/pexels-photo-28216688/free-photo-of-autumn-camping.png';
+
+const DEFAULT_IMAGES_FOR_TYPES: Record<string, any> = {
+  Villa: DefaultImageVilla,
+  Apartment: DefaultImageApartment,
+  Land: DefaultImageLand,
+  Office: DefaultImageOffice,
+  Chalet: DefaultImageChalet,
+  Building: DefaultImageBuilding,
+  Farm: DefaultImageFarm,
+  Duplex: DefaultImageDuplex,
+  Floor: DefaultImageFloor,
+  Commercial: DefaultImageCommercial,
+  Stable: DefaultImageStable,
 };
-
-const FALLBACK_IMAGE_URL = 'https://via.placeholder.com/600x400?text=No+Image';
 
 const {width} = Dimensions.get('window');
 
@@ -38,15 +59,10 @@ const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({
   const {t, i18n} = useTranslation();
   const isArabic = i18n.language === 'ar';
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
-  const images: string[] =
+  const images: any[] =
     propertyData?.images && propertyData.images.length > 0
       ? propertyData.images
-      : [
-          DEFAULT_IMAGES_FOR_TYPES[
-            (propertyData?.type as keyof typeof DEFAULT_IMAGES_FOR_TYPES) ||
-              'apartment'
-          ] || FALLBACK_IMAGE_URL,
-        ];
+      : [DEFAULT_IMAGES_FOR_TYPES[propertyData?.type] || FALLBACK_IMAGE_URL];
 
   if (!visible) {
     return null;
@@ -60,108 +76,112 @@ const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({
             <ActivityIndicator size="large" color="#059669" />
           </View>
         ) : (
-          <ScrollView>
-            <View style={styles.imageContainer}>
-              <ScrollView
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                onMomentumScrollEnd={e => {
-                  const slide = Math.round(
-                    e.nativeEvent.contentOffset.x / width,
-                  );
-                  setSelectedImageIndex(slide);
-                }}>
-                {images.map((img: string, idx: number) => (
-                  <TouchableOpacity
-                    key={idx}
-                    activeOpacity={0.9}
-                    onPress={() => {}}>
-                    <Image
-                      source={{uri: img}}
-                      style={styles.image}
-                      resizeMode="cover"
+          <>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+              <View style={styles.imageContainer}>
+                <ScrollView
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  onMomentumScrollEnd={e => {
+                    const slide = Math.round(
+                      e.nativeEvent.contentOffset.x / width,
+                    );
+                    setSelectedImageIndex(slide);
+                  }}>
+                  {images.map((img: string, idx: number) => (
+                    <TouchableOpacity
+                      key={idx}
+                      activeOpacity={0.9}
+                      onPress={() => {}}>
+                      <Image
+                        source={{uri: img}}
+                        style={styles.image}
+                        resizeMode="cover"
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+                <View style={styles.dotsContainer}>
+                  {images.map((_: string, idx: number) => (
+                    <View
+                      key={idx}
+                      style={[
+                        styles.dot,
+                        selectedImageIndex === idx && styles.activeDot,
+                      ]}
                     />
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-              <View style={styles.dotsContainer}>
-                {images.map((_: string, idx: number) => (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.dot,
-                      selectedImageIndex === idx && styles.activeDot,
-                    ]}
+                  ))}
+                </View>
+              </View>
+              <View style={styles.contentPadding}>
+                <Text style={styles.price}>
+                  {Number(
+                    isArabic ? propertyData?.priceArabic : propertyData?.price,
+                  ) === 0 || !propertyData?.price
+                    ? 'N/A'
+                    : `${
+                        isArabic
+                          ? propertyData?.priceArabic
+                          : propertyData?.price
+                      } ${t('propertyDetails.pricePerYear')}`}
+                </Text>
+                <Text style={styles.location}>
+                  {t(`locations.${propertyData?.location?.city}`)}
+                </Text>
+                <View style={styles.detailsRow}>
+                  <Text style={styles.detailText}>
+                    {(isArabic
+                      ? propertyData?.bedroomsArabic
+                      : propertyData?.bedrooms) || '--'}{' '}
+                    {t('propertyDetails.bedrooms', {
+                      count: propertyData?.bedrooms || '--',
+                    })}
+                  </Text>
+                  <Text style={styles.separator}>|</Text>
+                  <Text style={styles.detailText}>
+                    {(isArabic
+                      ? propertyData?.bathroomsArabic
+                      : propertyData?.bathrooms) || '--'}{' '}
+                    {t('propertyDetails.bathrooms', {
+                      count: propertyData?.bathrooms || '--',
+                    })}
+                  </Text>
+                  <Text style={styles.separator}>|</Text>
+                  <Text style={styles.detailText}>
+                    {(isArabic
+                      ? propertyData?.sizeArabic
+                      : propertyData?.size) || '--'}{' '}
+                    {t('propertyDetails.area', {
+                      size: propertyData?.size || '--',
+                    })}
+                  </Text>
+                </View>
+                {propertyData?.description ? (
+                  <HTMLView
+                    value={propertyData.description}
+                    stylesheet={{
+                      p: styles.description,
+                      div: styles.description,
+                      span: styles.description,
+                    }}
                   />
-                ))}
+                ) : null}
+                <View style={styles.amenitiesSection}>
+                  <Text style={styles.sectionTitle}>
+                    {t('propertyDetails.amenities')}
+                  </Text>
+                  {propertyData?.amenities?.map(
+                    (amenity: string, idx: number) => (
+                      <Text key={idx} style={styles.amenityItem}>
+                        • {amenity}
+                      </Text>
+                    ),
+                  )}
+                </View>
               </View>
-            </View>
-            <View style={styles.contentPadding}>
-              <Text style={styles.price}>
-                {Number(
-                  isArabic ? propertyData?.priceArabic : propertyData?.price,
-                ) === 0 || !propertyData?.price
-                  ? 'N/A'
-                  : `${
-                      isArabic ? propertyData?.priceArabic : propertyData?.price
-                    } ${t('propertyDetails.pricePerYear')}`}
-              </Text>
-              <Text style={styles.location}>
-                {t(`locations.${propertyData?.location?.city}`)}
-              </Text>
-              <View style={styles.detailsRow}>
-                <Text style={styles.detailText}>
-                  {(isArabic
-                    ? propertyData?.bedroomsArabic
-                    : propertyData?.bedrooms) || '--'}{' '}
-                  {t('propertyDetails.bedrooms', {
-                    count: propertyData?.bedrooms || '--',
-                  })}
-                </Text>
-                <Text style={styles.separator}>|</Text>
-                <Text style={styles.detailText}>
-                  {(isArabic
-                    ? propertyData?.bathroomsArabic
-                    : propertyData?.bathrooms) || '--'}{' '}
-                  {t('propertyDetails.bathrooms', {
-                    count: propertyData?.bathrooms || '--',
-                  })}
-                </Text>
-                <Text style={styles.separator}>|</Text>
-                <Text style={styles.detailText}>
-                  {(isArabic ? propertyData?.sizeArabic : propertyData?.size) ||
-                    '--'}{' '}
-                  {t('propertyDetails.area', {
-                    size: propertyData?.size || '--',
-                  })}
-                </Text>
-              </View>
-              {/* Removed 'see more details' and description is always fully shown */}
-              {propertyData?.description ? (
-                <HTMLView
-                  value={propertyData.description}
-                  stylesheet={{
-                    p: styles.description,
-                    div: styles.description,
-                    span: styles.description,
-                  }}
-                />
-              ) : null}
-              <View style={styles.amenitiesSection}>
-                <Text style={styles.sectionTitle}>
-                  {t('propertyDetails.amenities')}
-                </Text>
-                {propertyData?.amenities?.map(
-                  (amenity: string, idx: number) => (
-                    <Text key={idx} style={styles.amenityItem}>
-                      • {amenity}
-                    </Text>
-                  ),
-                )}
-              </View>
-            </View>
-            {/* Agent info fixed to bottom with white bg and smaller close button */}
+            </ScrollView>
+
             <View style={styles.agentFooterSection}>
               <View style={styles.agentSectionFooterContent}>
                 <Image
@@ -189,7 +209,7 @@ const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({
                 </TouchableOpacity>
               </View>
             </View>
-          </ScrollView>
+          </>
         )}
       </View>
     </Modal>
@@ -199,6 +219,9 @@ const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({
 const styles = StyleSheet.create({
   modalContainer: {flex: 1, backgroundColor: '#fff'},
   centered: {flex: 1, justifyContent: 'center', alignItems: 'center'},
+  scrollContent: {
+    paddingBottom: 100, // space for fixed footer
+  },
   imageContainer: {width: '100%', height: 250, backgroundColor: '#2f3b56'},
   image: {width, height: 250},
   dotsContainer: {
@@ -240,7 +263,7 @@ const styles = StyleSheet.create({
   agentName: {fontWeight: 'bold', fontSize: 16},
   agentPhone: {color: '#059669', fontSize: 15, marginTop: 2},
   agentFooterSection: {
-    position: 'static',
+    position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
@@ -249,7 +272,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#e5e7eb',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOffset: {width: 0, height: -2},
     shadowOpacity: 0.06,
     shadowRadius: 4,

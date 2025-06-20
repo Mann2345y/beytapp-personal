@@ -15,14 +15,8 @@ const SignupScreen = () => {
     mutationFn: signup,
     onSuccess: data => {
       loginUser(data?.user || {name: 'Signed up'});
-      Alert.alert('Signup successful', 'You are now logged in!');
     },
-    onError: error => {
-      Alert.alert(
-        'Signup failed',
-        error?.response?.data?.message || 'Error signing up',
-      );
-    },
+    onError: error => {},
   });
 
   const handleSignup = () => {

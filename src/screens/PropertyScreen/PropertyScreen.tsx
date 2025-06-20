@@ -36,6 +36,8 @@ const PropertyScreen: React.FC = () => {
     }
   };
 
+  console.log({properties});
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.languageSwitcherWrapper}>

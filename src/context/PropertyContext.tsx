@@ -100,7 +100,7 @@ export const PropertyProvider: React.FC<PropertyProviderProps> = ({
     queryKey: ['properties', convertedFilters],
     queryFn: fetchProperties,
     getNextPageParam: lastPage => lastPage.nextPage,
-    // Refetch when filters change (by queryKey)
+    initialPageParam: 1,
   });
 
   // Flatten pages to a single array

@@ -58,3 +58,10 @@ export const fetchFavorites = async userId => {
   );
   return data;
 };
+
+export const createPropertyMutation = async variables => {
+  const response = await api.post(`${ROUTES.ADD_PROPERTY}`, {
+    ...variables,
+  });
+  return response.data;
+};
